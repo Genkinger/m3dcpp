@@ -4,12 +4,64 @@
 #include <string>
 #include <sstream>
 #include <cmath>
+#include <array>
+#include <experimental/array>
 
 namespace M3D {
     template<int comp, typename T>
     struct Vector {
 
-        T m[comp] = {0};
+        Vector<comp,T>(){}
+       // Vector<comp,T>(std::array<T,comp> arr) : m{arr}{};
+        //Vector<comp,T>(const T (&arr)[comp]): m{std::experimental::to_array(arr)}{};
+
+
+        Vector<4,float>(float x,float y, float z, float w) {
+            m[0] = x;
+            m[1] = y;
+            m[2] = z;
+            m[3] = w;
+        };
+        Vector<3,float>(float x,float y, float z) {
+            m[0] = x;
+            m[1] = y;
+            m[2] = z;
+        };
+        Vector<2,float>(float x,float y) {
+            m[0] = x;
+            m[1] = y;
+        };
+/*
+        Vector<4,int>(int x,int y, int z, int w) {
+            m[0] = x;
+            m[1] = y;
+            m[2] = z;
+            m[3] = w;
+        };
+        Vector<3,int>(int x,int y, int z) {
+            m[0] = x;
+            m[1] = y;
+            m[2] = z;
+        };
+        Vector<2,int>(int x,int y) {
+            m[0] = x;
+            m[1] = y;
+        };
+*/
+        Vector<comp,T>(T *arr){
+            bool eoa = false;
+            for(int i = 0; i < comp; i++){
+                if(eoa){
+                    m[i] = 0;
+                }else {
+                    eoa = (arr == nullptr);
+                    m[i] = *arr++;
+                }
+            }
+        };
+
+
+        std::array<T,comp> m = {0};
 
         Vector<comp, T> operator+(const Vector<comp, T> &other) {
             Vector<comp, T> res;
@@ -18,7 +70,6 @@ namespace M3D {
             }
             return res;
         };
-
         Vector<comp, T> operator-(const Vector<comp, T> &other) {
             Vector<comp, T> res;
             for (int i = 0; i < comp; ++i) {
@@ -26,7 +77,6 @@ namespace M3D {
             }
             return res;
         };
-
         Vector<comp, T> operator*(const Vector<comp, T> &other) {
             Vector<comp, T> res;
             for (int i = 0; i < comp; ++i) {
@@ -34,7 +84,6 @@ namespace M3D {
             }
             return res;
         };
-
         Vector<comp, T> operator/(const Vector<comp, T> &other) {
             Vector<comp, T> res;
             for (int i = 0; i < comp; ++i) {
@@ -43,7 +92,6 @@ namespace M3D {
             }
             return res;
         };
-
         Vector<comp, T> operator+(float other) {
             Vector<comp, T> res;
             for (int i = 0; i < comp; ++i) {
@@ -51,7 +99,6 @@ namespace M3D {
             }
             return res;
         };
-
         Vector<comp, T> operator-(float other) {
             Vector<comp, T> res;
             for (int i = 0; i < comp; ++i) {
@@ -59,7 +106,6 @@ namespace M3D {
             }
             return res;
         };
-
         Vector<comp, T> operator*(float other) {
             Vector<comp, T> res;
             for (int i = 0; i < comp; ++i) {
@@ -67,7 +113,6 @@ namespace M3D {
             }
             return res;
         };
-
         Vector<comp, T> operator/(float other) {
             Vector<comp, T> res;
             if (other == 0) return res;
@@ -77,14 +122,13 @@ namespace M3D {
             return res;
         };
 
+
         T &operator[](int at) {
             return m[at];
         };
-
         T operator[](int at) const {
             return m[at];
         }
-
         T &operator[](char at) {
             switch (at) {
                 case 'x':
@@ -105,7 +149,6 @@ namespace M3D {
                     return m[0];
             }
         }
-
         T operator[](char at) const {
             switch (at) {
                 case 'x':
@@ -149,12 +192,11 @@ namespace M3D {
             }else{
                 float sum = 0;
                 for (int i = 0; i < n; ++i) {
-                    sum += (*this)[i] * other[i];
+                    sum += m[i] * other[i];
                 }
                 return sum;
             }
         }
-
         Vector<3, T> Cross(const Vector<3, T> &other) const {
             Vector<3, T> res;
             res[0] = (*this)[1] * other[2] - (*this)[2] * other[1];
@@ -173,13 +215,12 @@ namespace M3D {
             *this = *this / len;
 
         }
-
         Vector<comp, T> Normalize_Copy() const {
             Vector<comp, T> res;
             float len = Length();
             if (len == 0) return res;
             for (int i = 0; i < comp; i++) {
-                res[i] = (*this)[i] / len;
+                res[i] = m[i] / len;
             }
             return res;
         }
@@ -420,6 +461,7 @@ namespace M3D {
 
     };
 
+
     typedef Matrix<4, float> Mat4f;
     typedef Matrix<3, float> Mat3f;
     typedef Vector<4, float> Vec4f;
@@ -430,12 +472,13 @@ namespace M3D {
     typedef Vector<2, int> Vec2i;
 
     template<int n, typename tT>
-    std::ostream &operator<<(std::ostream &os, const Vector<n, tT> &vec) {
+    std::ostream &operator<<(std::ostream &os, const M3D::Vector<n, tT> &vec) {
         os << vec.ToString();
         return os;
     };
+
     template<int comp, typename T>
-    std::ostream &operator<<(std::ostream &os, const Matrix<comp, T> &mat) {
+    std::ostream &operator<<(std::ostream &os, const M3D::Matrix<comp, T> &mat) {
         for (int i = 0; i < comp; i++) {
             os << "|";
             for (int j = 0; j < comp; j++) {
@@ -447,7 +490,7 @@ namespace M3D {
             os << "|\n";
         }
         return os;
-    }
+    };
 
 
     bool InRange(float value, float min, float max);
@@ -455,7 +498,9 @@ namespace M3D {
     float Constrain(float value, float min, float max);
     float InterpolateLinear(float start, float end, float factor);
 
-};
+}
+
+
 
 #endif
 
